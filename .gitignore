@@ -4,3 +4,7 @@ playbooks/files/ssh-keys/
 *.retry
 env
 .tmp/
+/venv
+
+# For PyCharm
+/.idea

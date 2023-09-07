@@ -4,8 +4,6 @@
     state: present
     name:
      - boto3
-     - boto
-  become: yes
   tags:
     - prerequisites
 
@@ -22,7 +20,6 @@
   ec2_key:
     name: "{{ key_pair_name }}"
     region: "{{ ec2_region }}"
-    wait: True
   register: key_pair
   tags:
     - aws
@@ -56,7 +53,7 @@
     - AWS
 
 - name: Find the default VPC
-  ec2_vpc_net_facts:
+  ec2_vpc_net_info:
     region: "{{ ec2_region }}"
     filters:
       isDefault: "true"
@@ -66,7 +63,7 @@
     - AWS
 
 - name: Find the default VPC subnet
-  ec2_vpc_subnet_facts:
+  ec2_vpc_subnet_info:
     region: "{{ ec2_region }}"
     filters:
       "vpc-id": "{{ vpc_nets.vpcs[0].vpc_id }}"
@@ -95,7 +92,7 @@
 
 #Look up the AMI id to use based on a search
 - name: Look up Debian Jessie AMI
-  ec2_ami_facts:
+  ec2_ami_info:
     owners: "{{ base_image.debian_aws_account_id }}"
     region: "{{ ec2_region }}"
     filters:
@@ -111,23 +108,27 @@
 
 #---- Launch EC2 instance ----
 - name: Launch an EC2 instance
-  ec2:
+  ec2_instance:
     key_name: "{{ key_pair_name }}"
-    assign_public_ip: True
+    network:
+      assign_public_ip: True
     vpc_subnet_id: "{{ vpc_subnets.subnets[0].subnet_id }}"
-    image: "{{ debian_ami.images[0].image_id }}"
+    image:
+      id: "{{ debian_ami.images[0].image_id }}"
     instance_type: "{{ instance_type }}"
     region: "{{ ec2_region }}"
-    group_id: "{{ security_group.group_id  }}"
+    security_group: "{{ security_group.group_id  }}"
+    state: running
     wait: yes
-    instance_tags:
+    tags:
       Name: "{{ placeholder }}"
       Type: "VyOS"
     volumes:
       - device_name: /dev/sdf
-        volume_type: gp2
-        volume_size: "{{ volume_size }}"
-        delete_on_termination: True
+        ebs:
+          volume_type: gp2
+          volume_size: "{{ volume_size }}"
+          delete_on_termination: True
   register: ec2_instance
   tags:
     - aws
@@ -135,7 +136,7 @@
 
 - name: Add instance's public DNS name to ansible host group ec2
   add_host:
-    name: "{{ ec2_instance.instances[0].public_ip }}"
+    name: "{{ ec2_instance.instances[0].public_ip_address }}"
     groups: ec2
     ansible_user: admin
     ansible_ssh_private_key_file: "{{ key_pair_file }}"
@@ -145,15 +146,15 @@
     - AWS
 
 - name: Show EC2 instance public ip.
-  debug: 
-    msg: "{{ ec2_instance.instances[0].public_ip }}"
+  debug:
+    msg: "{{ ec2_instance.instances[0].public_ip_address }}"
   tags:
     - aws
     - AWS
 
 - name: Wait for instance's SSH port to open
   wait_for:
-    host: "{{ ec2_instance.instances[0].public_ip }}"
+    host: "{{ ec2_instance.instances[0].public_ip_address }}"
     port: 22
     delay: 10
     timeout: 300
