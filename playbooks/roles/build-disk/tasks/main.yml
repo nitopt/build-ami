@@ -5,6 +5,7 @@
     name:
       - parted
       - e2fsprogs
+      - dosfstools
     state: present
 
 - name: Download VyOS ISO release
@@ -45,13 +46,39 @@
   parted:
     device: "{{ volume_drive }}"
     state: present
-    label: msdos
+    label: gpt
     number: 1
-    part_type: primary
-    part_start: 0%
+    name: ""
+    part_start: 34s
+    part_end: 2047s
+    flags: [bios_grub]
+
+- name: Partition the target drive
+  parted:
+    device: "{{ volume_drive }}"
+    state: present
+    label: gpt
+    number: 2
+    name: ""
+    part_start: 2048s
+    part_end: 526335s
+    flags: [boot, esp]
+
+- name: Partition the target drive
+  parted:
+    device: "{{ volume_drive }}"
+    state: present
+    label: gpt
+    number: 3
+    name: ""
+    part_start: 526336s
     part_end: 100%
-    align: optimal
-    flags: [boot]
+
+- name: Create a filesystem on efi partition
+  filesystem:
+    fstype: "{{ EFI_FSTYPE }}"
+    device: "{{ EFI_PARTITION }}"
+    opts: "-n EFI -F 32"
 
 - name: Create a filesystem on root partition
   filesystem:
@@ -75,7 +102,7 @@
 
 - name: Create the work directory
   file:
-    path: "{{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/work/work"
+    path: "{{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/work"
     state: directory
 
 - name: Copy squashfs image from ISO to root partition
@@ -101,7 +128,7 @@
     name: "{{ INSTALL_ROOT }}"
     src: none
     fstype: overlay
-    opts: "noatime,lowerdir={{ READ_ROOT }},upperdir={{ RW_DIR.path }},workdir={{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/work/work"
+    opts: "noatime,lowerdir={{ READ_ROOT }},upperdir={{ RW_DIR.path }},workdir={{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/work"
     state: mounted
 
 # ---- Post image installation tasks ----
@@ -124,6 +151,11 @@
     path: "{{ WRITE_ROOT }}/boot/grub"
     state: directory
 
+- name: Create EFI directory
+  file:
+    path: "{{ WRITE_ROOT }}/boot/efi"
+    state: directory
+
 # It is necessary to mount and bind /dev, /proc, /sys and /boot in order to execute grub-install
 # and install GRUB correctly within the {{ volume_drive }} using chroot
 
@@ -133,12 +165,18 @@
   shell: mount --bind /dev {{ INSTALL_ROOT }}/dev &&
           mount --bind /proc {{ INSTALL_ROOT }}/proc &&
           mount --bind /sys {{ INSTALL_ROOT }}/sys &&
-          mount --bind {{ WRITE_ROOT }} {{ INSTALL_ROOT }}/boot
+          mount --bind {{ WRITE_ROOT }}/boot {{ INSTALL_ROOT }}/boot
+
+- name: Mount efi partition
+  command: chroot {{ INSTALL_ROOT }} mount {{ EFI_PARTITION }} /boot/efi
 
 - name: Install GRUB in the boot sector of {{ volume_drive }}
-  command: chroot {{ INSTALL_ROOT }} grub-install --no-floppy --root-directory=/boot {{ volume_drive }}
+  command: chroot {{ INSTALL_ROOT }} grub-install --no-floppy --efi-directory=/boot/efi --target=x86_64-efi {{ volume_drive }}
   args:
     creates: "{{ INSTALL_ROOT }}/boot/grub/grubenv"
+
+- name: Unmount efi partition
+  command: chroot {{ INSTALL_ROOT }} umount /boot/efi
 
 - name: Configure GRUB for AWS EC2
   template:

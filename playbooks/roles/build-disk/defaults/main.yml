@@ -8,8 +8,10 @@ CD_ROOT: /mnt/cdrom
 CD_SQUASH_ROOT: /mnt/cdsquash
 SQUASHFS_IMAGE: "{{ CD_ROOT }}/live/filesystem.squashfs"
 
+EFI_FSTYPE: vfat
+EFI_PARTITION: "{{ volume_drive }}2"
 ROOT_FSTYPE: ext4
-ROOT_PARTITION: "{{ volume_drive }}1" # The install partition
+ROOT_PARTITION: "{{ volume_drive }}3" # The install partition
 volume_size: 4
 volume_drive: /dev/xvdf
 WRITE_ROOT: /mnt/wroot
