@@ -1,7 +1,25 @@
 set default=0
-set timeout=0
+set timeout=5
+serial --unit=0 --speed=115200
+terminal_output --append serial
+terminal_input serial console
 
-menuentry "VyOS AMI (HVM) {{ version_string.stdout }}" {
-  linux /boot/{{ version_string.stdout }}/vmlinuz boot=live selinux=0 vyos-union=/boot/{{ version_string.stdout }} console=tty1
-  initrd /boot/{{ version_string.stdout }}/initrd.img
+menuentry "VyOS {{ version_string.stdout }} (KVM console)" {
+        linux /boot/{{ version_string.stdout }}/vmlinuz boot=live quiet rootdelay=5 noautologin net.ifnames=0 biosdevname=0 vyos-union=/boot/{{ version_string.stdout }} console=ttyS0,115200 console=tty0
+        initrd /boot/{{ version_string.stdout }}/initrd.img
+}
+
+menuentry "VyOS {{ version_string.stdout }} (Serial console)" {
+        linux /boot/{{ version_string.stdout }}/vmlinuz boot=live quiet rootdelay=5 noautologin net.ifnames=0 biosdevname=0 vyos-union=/boot/{{ version_string.stdout }} console=tty0 console=ttyS0,115200
+        initrd /boot/{{ version_string.stdout }}/initrd.img
+}
+
+menuentry "Lost password change {{ version_string.stdout }} (KVM console)" {
+        linux /boot/{{ version_string.stdout }}/vmlinuz boot=live quiet rootdelay=5 noautologin net.ifnames=0 biosdevname=0 vyos-union=/boot/{{ version_string.stdout }} console=ttyS0,115200 console=tty0 init=/opt/vyatta/sbin/standalone_root_pw_reset
+        initrd /boot/{{ version_string.stdout }}/initrd.img
+}
+
+menuentry "Lost password change {{ version_string.stdout }} (Serial console)" {
+        linux /boot/{{ version_string.stdout }}/vmlinuz boot=live quiet rootdelay=5 noautologin net.ifnames=0 biosdevname=0 vyos-union=/boot/{{ version_string.stdout }} console=tty0 console=ttyS0,115200 init=/opt/vyatta/sbin/standalone_root_pw_reset
+        initrd /boot/{{ version_string.stdout }}/initrd.img
 }

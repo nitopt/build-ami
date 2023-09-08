@@ -4,15 +4,15 @@
   ec2_snapshot:
     region: "{{ ec2_region }}"
     device_name: "{{ ebs_drive }}"
-    instance_id: "{{ ec2_instance.instances[0].id }}"
+    instance_id: "{{ ec2_instance.instances[0].instance_id }}"
     description: "{{ snapshot_description }}"
   register: ec2_snap
 
 - name: Stop instance that were previously launched
-  ec2:
+  ec2_instance:
     state: 'stopped'
     instance_ids: 
-      - "{{ ec2_instance.instances[0].id }}"
+      - "{{ ec2_instance.instances[0].instance_id }}"
     region: "{{ ec2_region }}"
     wait: yes
 
@@ -43,9 +43,9 @@
       build_user: "{{ ansible_user_id }}"
       build_controller_host: "{{ ansible_hostname }}"
 
-# - name: Register AMI from {{ ec2_instance.instances[0].id }}
+# - name: Register AMI from {{ ec2_instance.instances[0].instance_id }}
 #   ec2_ami:
-#     instance_id: "{{ ec2_instance.instances[0].id }}"
+#     instance_id: "{{ ec2_instance.instances[0].instance_id }}"
 #     wait: yes
 #     name: "{{ ami_name }}"
 #     region: "{{ ec2_region }}"
@@ -61,5 +61,3 @@
 #       iso: "{{ iso | basename }}"
 #       build_user: "{{ ansible_user_id }}"
 #       build_controller_host: "{{ ansible_hostname }}"
-
-

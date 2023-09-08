@@ -1,3 +1,2 @@
 ---
 # vars file for build-disk
-vyos_iso_url: "{{ iso }}"

@@ -1,4 +1,6 @@
 doc/
+playbooks/roles/build-disk/files/*
+!playbooks/roles/build-disk/files/.gitkeep
 playbooks/files/ssh-keys/
 .vagrant
 *.retry

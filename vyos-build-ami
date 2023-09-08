@@ -25,7 +25,7 @@ fi
 # Get arguments
 
 if [ $# -lt 1 ]; then
-    echo "Usage: $0 <ISO URL>"
+    echo "Usage: $0 <ISO file>"
     exit 1
 fi
 

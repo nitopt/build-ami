@@ -1,6 +1,6 @@
 ---
 # defaults file for build-disk
-vyos_iso_url: "{{ iso }}"
+vyos_iso_file: "{{ iso }}"
 vyos_iso_local: /tmp/vyos.iso
 vyos_key_url: http://packages.vyos.net/vyos-release.gpg
 vyos_key_local: /tmp/vyos-release.gpg

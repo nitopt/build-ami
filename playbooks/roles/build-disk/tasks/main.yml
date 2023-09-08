@@ -1,65 +1,16 @@
 ---
-- name: remove sources.list
-  file:
-    path: "/etc/apt/sources.list"
-    state: absent
-
-- name: remove sources.list.d
-  file:
-    path: "/etc/apt/sources.list.d"
-    state: absent
-
-- name: update sources.list
-  copy:
-    src: "files/sources.list"
-    dest: "/etc/apt/sources.list"
-    owner: root
-    group: root
-    mode: 0644
-    force: yes
-
 - name: Install required packages
   apt:
     update_cache: yes
     name:
       - parted
       - e2fsprogs
-      - gnupg
     state: present
 
-- name: Load aufs module
-  shell: modprobe aufs
-
-# ---- Set up the specified ISO release ----
-
-# - name: Fetch VyOS ISO GPG signature
-#   uri:
-#     url: "{{ vyos_iso_url }}.asc"
-#     dest: "{{ vyos_iso_local }}.asc"
-#     status_code: 200,404,403
-#   tags: verify
-#   register: gpg_uri
-
 - name: Download VyOS ISO release
-  get_url:
-    url: "{{ vyos_iso_url }}"
+  copy:
+    src: "{{ vyos_iso_file }}"
     dest: "{{ vyos_iso_local }}"
-
-# - name: Fetch the VyOS release GPG key
-#   get_url:
-#     url: "{{ vyos_key_url}}"
-#     dest: "{{ vyos_key_local }}"
-#   tags: verify
-
-# - name: Install the VyOS release GPG key
-#   command: gpg --import {{ vyos_key_local }}
-#   when: gpg_uri.status == 200
-#   tags: verify
-
-# - name: Validate ISO GPG signature
-#   command: gpg --verify {{ vyos_iso_local }}.asc {{ vyos_iso_local }}
-#   when: gpg_uri.status == 200
-#   tags: verify
 
 - name: Mount ISO
   mount:
@@ -149,8 +100,8 @@
   mount:
     name: "{{ INSTALL_ROOT }}"
     src: none
-    fstype: aufs
-    opts: "noatime,dirs={{ RW_DIR.path }}=rw:{{ READ_ROOT }}=rr"
+    fstype: overlay
+    opts: "noatime,lowerdir={{ READ_ROOT }},upperdir={{ RW_DIR.path }},workdir={{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/work/work"
     state: mounted
 
 # ---- Post image installation tasks ----
@@ -183,8 +134,6 @@
           mount --bind /proc {{ INSTALL_ROOT }}/proc &&
           mount --bind /sys {{ INSTALL_ROOT }}/sys &&
           mount --bind {{ WRITE_ROOT }} {{ INSTALL_ROOT }}/boot
-  args:
-    warn: no
 
 - name: Install GRUB in the boot sector of {{ volume_drive }}
   command: chroot {{ INSTALL_ROOT }} grub-install --no-floppy --root-directory=/boot {{ volume_drive }}
@@ -253,4 +202,3 @@
     src: "{{ vyos_iso_local }}"
     fstype: iso9660
     state: unmounted
-
