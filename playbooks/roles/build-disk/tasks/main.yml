@@ -42,7 +42,7 @@
 - name: Debug version string as read from ISO
   debug: msg="This is version {{ version_string.stdout }}"
 
-- name: Partition the target drive
+- name: Create BIOS compatible partition
   parted:
     device: "{{ volume_drive }}"
     state: present
@@ -53,7 +53,7 @@
     part_end: 2047s
     flags: [bios_grub]
 
-- name: Partition the target drive
+- name: Create ESP partition
   parted:
     device: "{{ volume_drive }}"
     state: present
@@ -64,7 +64,7 @@
     part_end: 526335s
     flags: [boot, esp]
 
-- name: Partition the target drive
+- name: Create OS root partition
   parted:
     device: "{{ volume_drive }}"
     state: present
@@ -74,10 +74,10 @@
     part_start: 526336s
     part_end: 100%
 
-- name: Create a filesystem on efi partition
+- name: Create a filesystem on ESP partition
   filesystem:
-    fstype: "{{ EFI_FSTYPE }}"
-    device: "{{ EFI_PARTITION }}"
+    fstype: "{{ ESP_FSTYPE }}"
+    device: "{{ ESP_PARTITION }}"
     opts: "-n EFI -F 32"
 
 - name: Create a filesystem on root partition
@@ -93,17 +93,20 @@
     fstype: "{{ ROOT_FSTYPE }}"
     state: mounted
 
-    # ---- Install image from ISO ----
+# ---- Install image from ISO ----
+
 - name: Create {{ WRITE_ROOT }} directories
   file:
     path: "{{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/rw"
     state: directory
+    recurse: true
   register: RW_DIR
 
 - name: Create the work directory
   file:
     path: "{{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/work"
     state: directory
+    recurse: true
 
 - name: Copy squashfs image from ISO to root partition
   command: cp -p {{ SQUASHFS_IMAGE }} {{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/{{ version_string.stdout }}.squashfs
@@ -134,6 +137,7 @@
 # ---- Post image installation tasks ----
 
     ## ---- VyOS configuration ----
+
 - name: Make sure that config partition marker exists
   file:
     path: "{{ INSTALL_ROOT }}/opt/vyatta/etc/config/.vyatta_config"
@@ -146,15 +150,18 @@
     mode: 0755
 
     ## ---- Install GRUB boot loader ----
+
 - name: Create GRUB directory
   file:
     path: "{{ WRITE_ROOT }}/boot/grub"
     state: directory
+    recurse: true
 
 - name: Create EFI directory
   file:
     path: "{{ WRITE_ROOT }}/boot/efi"
     state: directory
+    recurse: true
 
 # It is necessary to mount and bind /dev, /proc, /sys and /boot in order to execute grub-install
 # and install GRUB correctly within the {{ volume_drive }} using chroot
@@ -167,15 +174,30 @@
           mount --bind /sys {{ INSTALL_ROOT }}/sys &&
           mount --bind {{ WRITE_ROOT }}/boot {{ INSTALL_ROOT }}/boot
 
-- name: Mount efi partition
-  command: chroot {{ INSTALL_ROOT }} mount {{ EFI_PARTITION }} /boot/efi
+- name: Mount ESP partition
+  command: chroot {{ INSTALL_ROOT }} mount {{ ESP_PARTITION }} /boot/efi
+
+- name: Create EFI directory
+  file:
+    path: "{{ INSTALL_ROOT }}/boot/efi/EFI/{{ item }}"
+    state: directory
+    recurse: true
+  with_items:
+    - BOOT
+    - VyOS
 
 - name: Install GRUB in the boot sector of {{ volume_drive }}
   command: chroot {{ INSTALL_ROOT }} grub-install --no-floppy --efi-directory=/boot/efi --target=x86_64-efi {{ volume_drive }}
   args:
     creates: "{{ INSTALL_ROOT }}/boot/grub/grubenv"
 
-- name: Unmount efi partition
+- name: Copy EFI boot image
+  copy:
+    src: "{{ INSTALL_ROOT }}/boot/efi/EFI/VyOS/grubx64.efi"
+    remote_src: true
+    dest: "{{ INSTALL_ROOT }}/boot/efi/EFI/BOOT/BOOTX64.EFI"
+
+- name: Unmount ESP partition
   command: chroot {{ INSTALL_ROOT }} umount /boot/efi
 
 - name: Configure GRUB for AWS EC2
@@ -191,6 +213,7 @@
     mode: 0644
 
 # ---- Unmount all mounts ----
+
 - name: Unmount {{ INSTALL_ROOT }}/boot
   mount:
     name: "{{ INSTALL_ROOT }}/boot"

@@ -1,3 +1,10 @@
+interfaces {
+    ethernet eth0 {
+        address dhcp
+    }
+    loopback lo {
+    }
+}
 service {
     ssh {
         disable-password-authentication {
@@ -6,6 +13,25 @@ service {
     }
 }
 system {
+    config-management {
+        commit-revisions 100
+    }
+    conntrack {
+        modules {
+            ftp
+            h323
+            nfs
+            pptp
+            sip
+            sqlnet
+            tftp
+        }
+    }
+    console {
+        device ttyS0 {
+            speed 115200
+        }
+    }
     host-name VyOS-AMI
     login {
         user vyos {
@@ -13,31 +39,24 @@ system {
                 encrypted-password "*"
                 plaintext-password ""
             }
-            level admin
         }
     }
-    syslog {
+    ntp {
+        server time1.vyos.net {
+        }
+        server time2.vyos.net {
+        }
+        server time3.vyos.net {
+        }
+    }
+	syslog {
         global {
             facility all {
-                level notice
+                level info
             }
             facility protocols {
                 level debug
             }
         }
     }
-    ntp {
-        server "0.pool.ntp.org"
-        server "1.pool.ntp.org"
-        server "2.pool.ntp.org"
-    }
-    config-management {
-        commit-revisions 100
-    }
-}
-interfaces {
-    ethernet eth0 {
-        address dhcp
-    }
-    loopback lo
 }

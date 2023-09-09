@@ -2,14 +2,12 @@
 # defaults file for build-disk
 vyos_iso_file: "{{ iso }}"
 vyos_iso_local: /tmp/vyos.iso
-vyos_key_url: http://packages.vyos.net/vyos-release.gpg
-vyos_key_local: /tmp/vyos-release.gpg
 CD_ROOT: /mnt/cdrom
 CD_SQUASH_ROOT: /mnt/cdsquash
 SQUASHFS_IMAGE: "{{ CD_ROOT }}/live/filesystem.squashfs"
 
-EFI_FSTYPE: vfat
-EFI_PARTITION: "{{ volume_drive }}2"
+ESP_FSTYPE: vfat
+ESP_PARTITION: "{{ volume_drive }}2"
 ROOT_FSTYPE: ext4
 ROOT_PARTITION: "{{ volume_drive }}3" # The install partition
 volume_size: 4
