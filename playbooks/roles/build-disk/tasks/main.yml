@@ -75,7 +75,7 @@
 
 - name: Create the work directory
   file:
-    path: "{{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/work"
+    path: "{{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/work/work"
     state: directory
 
 - name: Copy squashfs image from ISO to root partition
@@ -101,7 +101,7 @@
     name: "{{ INSTALL_ROOT }}"
     src: none
     fstype: overlay
-    opts: "noatime,lowerdir={{ READ_ROOT }},upperdir={{ RW_DIR.path }},workdir={{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/work"
+    opts: "noatime,lowerdir={{ READ_ROOT }},upperdir={{ RW_DIR.path }},workdir={{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/work/work"
     state: mounted
 
 # ---- Post image installation tasks ----
@@ -133,10 +133,10 @@
   shell: mount --bind /dev {{ INSTALL_ROOT }}/dev &&
           mount --bind /proc {{ INSTALL_ROOT }}/proc &&
           mount --bind /sys {{ INSTALL_ROOT }}/sys &&
-          mount --bind {{ WRITE_ROOT }}/boot {{ INSTALL_ROOT }}/boot
+          mount --bind {{ WRITE_ROOT }} {{ INSTALL_ROOT }}/boot
 
 - name: Install GRUB in the boot sector of {{ volume_drive }}
-  command: chroot {{ INSTALL_ROOT }} grub-install --no-floppy {{ volume_drive }}
+  command: chroot {{ INSTALL_ROOT }} grub-install --no-floppy --root-directory=/boot {{ volume_drive }}
   args:
     creates: "{{ INSTALL_ROOT }}/boot/grub/grubenv"
 
