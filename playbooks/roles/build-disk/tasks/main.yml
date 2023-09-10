@@ -172,14 +172,14 @@
   shell: mount --bind /dev {{ INSTALL_ROOT }}/dev &&
           mount --bind /proc {{ INSTALL_ROOT }}/proc &&
           mount --bind /sys {{ INSTALL_ROOT }}/sys &&
-          mount --bind {{ WRITE_ROOT }}/boot {{ INSTALL_ROOT }}/boot
+          mount --bind {{ WRITE_ROOT }} {{ INSTALL_ROOT }}/boot
 
 - name: Mount ESP partition
-  command: chroot {{ INSTALL_ROOT }} mount {{ ESP_PARTITION }} /boot/efi
+  command: chroot {{ INSTALL_ROOT }} mount {{ ESP_PARTITION }} /boot/boot/efi
 
 - name: Create EFI directory
   file:
-    path: "{{ INSTALL_ROOT }}/boot/efi/EFI/{{ item }}"
+    path: "{{ WRITE_ROOT }}/boot/efi/EFI/{{ item }}"
     state: directory
     recurse: true
   with_items:
@@ -187,18 +187,18 @@
     - VyOS
 
 - name: Install GRUB in the boot sector of {{ volume_drive }}
-  command: chroot {{ INSTALL_ROOT }} grub-install --no-floppy --efi-directory=/boot/efi --target=x86_64-efi {{ volume_drive }}
+  command: chroot {{ INSTALL_ROOT }} grub-install --no-floppy --root-directory=/boot --efi-directory=/boot/boot/efi --target=x86_64-efi {{ volume_drive }}
   args:
     creates: "{{ INSTALL_ROOT }}/boot/grub/grubenv"
 
 - name: Copy EFI boot image
   copy:
-    src: "{{ INSTALL_ROOT }}/boot/efi/EFI/VyOS/grubx64.efi"
+    src: "{{ WRITE_ROOT }}/boot/efi/EFI/VyOS/grubx64.efi"
     remote_src: true
-    dest: "{{ INSTALL_ROOT }}/boot/efi/EFI/BOOT/BOOTX64.EFI"
+    dest: "{{ WRITE_ROOT }}/boot/efi/EFI/BOOT/BOOTX64.EFI"
 
 - name: Unmount ESP partition
-  command: chroot {{ INSTALL_ROOT }} umount /boot/efi
+  command: chroot {{ INSTALL_ROOT }} umount /boot/boot/efi
 
 - name: Configure GRUB for AWS EC2
   template:
