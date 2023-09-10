@@ -28,12 +28,10 @@ Ansible is available from the repositories on most Linux distributions.
 
 These scripts and playbooks should work on any Linux system, or, theoretically, on any system supported by ansible and awscli.
 
-At this time Python3 support is limited by its supports by ansible, so it's safer to use Python 2.7.
-
 ## Usage
 
 ```
-./vyos-build-ami <VyOS ISO URL>
+./vyos-build-ami <VyOS ISO file>
 ```
 
 The baseline code now supports only VyOS >=1.2.0. If you want to build an AMI from VyOS 1.1.x, check out the 1.1.x tag.
