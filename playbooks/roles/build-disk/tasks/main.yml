@@ -75,7 +75,7 @@
 
 - name: Create the work directory
   file:
-    path: "{{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/work/work"
+    path: "{{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/work"
     state: directory
 
 - name: Copy squashfs image from ISO to root partition
@@ -101,7 +101,7 @@
     name: "{{ INSTALL_ROOT }}"
     src: none
     fstype: overlay
-    opts: "noatime,lowerdir={{ READ_ROOT }},upperdir={{ RW_DIR.path }},workdir={{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/work/work"
+    opts: "noatime,lowerdir={{ READ_ROOT }},upperdir={{ RW_DIR.path }},workdir={{ WRITE_ROOT }}/boot/{{ version_string.stdout }}/work"
     state: mounted
 
 # ---- Post image installation tasks ----
