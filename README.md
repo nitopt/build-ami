@@ -40,8 +40,9 @@ source env/bin/activate
 pip install -r requirements.txt
 
 # https://vyos.net/get/nightly-builds/
-VYOS_ISO_FILE=vyos-1.5-rolling-202405121403-amd64.iso
-wget -O playbooks/files/${VYOS_ISO_FILE} https://github.com/vyos/vyos-rolling-nightly-builds/releases/download/1.5-rolling-202405121403/${VYOS_ISO_FILE}
+VYOS_ISO_NAME=1.5-rolling-202405121403
+VYOS_ISO_FILE=vyos-${VYOS_ISO_NAME}-amd64.iso
+wget -O playbooks/files/${VYOS_ISO_FILE} https://github.com/vyos/vyos-rolling-nightly-builds/releases/download/${VYOS_ISO_NAME}/${VYOS_ISO_FILE}
 ./vyos-build-ami ${VYOS_ISO_FILE}
 ```
 
