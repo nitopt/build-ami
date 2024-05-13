@@ -31,7 +31,18 @@ These scripts and playbooks should work on any Linux system, or, theoretically, 
 ## Usage
 
 ```
-./vyos-build-ami <VyOS ISO file>
+docker run -it -v $(pwd):/mount -w /mount --name ubuntu2404-ansible-8-3-0 ubuntu:noble
+
+apt install python3-full python3-pip python3-virtualenv libffi-dev openssh-client
+virtualenv env
+source env/bin/activate
+
+pip install -r requirements.txt
+
+# https://vyos.net/get/nightly-builds/
+VYOS_ISO_FILE=vyos-1.5-rolling-202405121403-amd64.iso
+wget -O playbooks/files/${VYOS_ISO_FILE} https://github.com/vyos/vyos-rolling-nightly-builds/releases/download/1.5-rolling-202405121403/${VYOS_ISO_FILE}
+./vyos-build-ami ${VYOS_ISO_FILE}
 ```
 
 The baseline code now supports only VyOS >=1.2.0. If you want to build an AMI from VyOS 1.1.x, check out the 1.1.x tag.
@@ -56,3 +67,4 @@ These scripts are available under the MIT license. See the LICENSE file for more
 
 build-ami playbooks were originally written by hydrajump (https://github.com/hydrajump) and are now maintained
 by the VyOS team.
+

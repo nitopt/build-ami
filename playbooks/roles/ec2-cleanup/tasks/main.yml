@@ -18,7 +18,7 @@
   ignore_errors: True
   with_items: "{{ ec2_instances.instances }}"
 
-- name: Delete key pair
+- name: Delete key pair on AWS
   ec2_key:
     name: "{{ key_pair_name }}"
     state: absent

@@ -1,11 +1,11 @@
 ---
-- name: install boto3 prerequisites
-  pip:
-    state: present
-    name:
-     - boto3
-  tags:
-    - prerequisites
+# - name: install boto3 prerequisites
+#   pip:
+#     state: present
+#     name:
+#      - boto3
+#   tags:
+#     - prerequisites
 
 # tasks file for provision-ec2-instance
 - name: Make sure that files/ssh-keys directory exists
@@ -16,6 +16,9 @@
     - aws
     - AWS
 
+- stat: path="{{ key_pair_file }}"
+  register: key_pair_file_tmp
+
 - name: Create an SSH key pair
   ec2_key:
     name: "{{ key_pair_name }}"
@@ -24,13 +27,14 @@
   tags:
     - aws
     - AWS
+  when: not key_pair_file_tmp.stat.exists
 
 - name: Dump key pair
   copy:
     content: "{{ key_pair.key.private_key }}"
     dest: "{{ key_pair_file }}"
     mode: 0600
-  when: key_pair.changed | bool
+  when: (key_pair.changed | bool) and not key_pair_file_tmp.stat.exists
   tags:
     - aws
     - AWS

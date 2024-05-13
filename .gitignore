@@ -2,6 +2,7 @@ doc/
 playbooks/roles/build-disk/files/*
 !playbooks/roles/build-disk/files/.gitkeep
 playbooks/files/ssh-keys/
+playbooks/files/*.iso
 .vagrant
 *.retry
 env
