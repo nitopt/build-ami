@@ -12,10 +12,6 @@ system {
             authentication {
                 encrypted-password "*"
                 plaintext-password ""
-                public-keys ec2 {
-                    key 'AAAAB3NzaC1yc2EAA.....'
-                    type ssh-rsa
-                }
             }
             level admin
         }
