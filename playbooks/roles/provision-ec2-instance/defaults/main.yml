@@ -1,10 +1,10 @@
 ---
 # defaults file for provision-ec2-instance
 key_pair_name: vyos-build-ami
-ec2_region: ap-northeast-1
+ec2_region: "{{ ec2_region }}"
 temp_folder: "{{ playbook_dir }}/files/ssh-keys"
 key_pair_file: "{{ temp_folder }}/{{ key_pair_name }}.pem"
-instance_type: t2.micro
+instance_type: "{{ instance_type }}"
 
 base_image:
   debian_aws_account_id: "136693071363"
@@ -14,6 +14,6 @@ base_image:
   root_device_type: "ebs"
 
 placeholder: vyos-build-ami
-volume_size: 4
-volume_drive: /dev/xvdf
+volume_size: "{{ volume_size }}"
+volume_drive: "{{ volume_drive }}"
 ansible_ssh_private_key_file: "{{ key_pair_file }}"

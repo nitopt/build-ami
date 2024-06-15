@@ -112,11 +112,19 @@
     path: "{{ INSTALL_ROOT }}/opt/vyatta/etc/config/.vyatta_config"
     state: touch
 
-- name: Copy the default config for EC2 to the installed image
-  template:
-    src: templates/config.boot.default.ec2
-    dest: "{{ INSTALL_ROOT }}/opt/vyatta/etc/config/config.boot"
-    mode: 0755
+## not copying the config.boot as I can't figure out a working one
+## > after launching the EC2 t3.* instance, open the EC2 Instance Connect, login as vyos/vyos and configure it manually
+## > you only need to set 3 things:
+#      set interfaces ethernet eth0 address 'dhcp'
+#      set system login user vyos authentication public-keys ec2 key '...'
+#      set system login user vyos authentication public-keys ec2 type 'ssh-rsa'
+#    and start ssh:
+#      service ssh start
+# - name: Copy the default config for EC2 to the installed image
+#   template:
+#     src: templates/config.boot.default.ec2
+#     dest: "{{ INSTALL_ROOT }}/opt/vyatta/etc/config/config.boot"
+#     mode: 0755
 
     ## ---- Install GRUB boot loader ----
 - name: Create GRUB directory
